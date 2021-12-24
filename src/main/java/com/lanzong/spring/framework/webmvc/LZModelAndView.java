@@ -2,9 +2,10 @@ package com.lanzong.spring.framework.webmvc;
 
 import java.util.Map;
 
+//封装页面模板和要往页面传送的参数的对应关系
 public class LZModelAndView {
-    private String viewName;
-    private Map<String,?> model;
+    private String viewName;//页面模板的名称
+    private Map<String,?> model;//往页面传送的参数
 
     public LZModelAndView(String viewName){
         this(viewName,null);

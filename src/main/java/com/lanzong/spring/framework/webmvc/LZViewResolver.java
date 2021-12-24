@@ -3,6 +3,7 @@ package com.lanzong.spring.framework.webmvc;
 import java.io.File;
 import java.util.Locale;
 
+//完成模板名称和模板解析引擎的匹配
 public class LZViewResolver {
     private final String DEFAULT_TEMPLATE_SUFFIX = ".html";
 

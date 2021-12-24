@@ -6,10 +6,10 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.RandomAccess;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//自定义模板解析引擎，每个页面可以有不同的处理引擎，只要页面名称和引擎对应起来
 public class LZView {
     public static final String DEFAULT_CONTENT_TYPE = "text/html;charset=utf-8";
     private File viewFile;
@@ -21,6 +21,7 @@ public class LZView {
         return DEFAULT_CONTENT_TYPE;
     }
 
+    //完成对模板的渲染
     public void render(Map<String,?> model, HttpServletRequest req, HttpServletResponse resp)throws Exception{
         StringBuffer sb = new StringBuffer();
         RandomAccessFile ra = new RandomAccessFile(this.viewFile,"r");
@@ -37,6 +38,7 @@ public class LZView {
                     paramName = paramName.replaceAll("￥\\{|\\}","");
                     Object paramValue = model.get(paramName);
                     if(null == paramValue){continue;}
+                    //把￥{}中间的字符串取出来
                     line = matcher.replaceFirst(makeStringForRegExp(paramValue.toString()));
                     matcher = pattern.matcher(line);
                 }
@@ -46,6 +48,7 @@ public class LZView {
             ra.close();
         }
         resp.setCharacterEncoding("utf-8");
+        //输出到页面
         resp.getWriter().write(sb.toString());
     }
 

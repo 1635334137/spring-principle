@@ -11,6 +11,7 @@ import com.lanzong.spring.framework.context.support.LZDefaultListableBeanFactory
 import com.lanzong.spring.framework.core.LZBeanFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -24,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LZApplicationContext extends LZDefaultListableBeanFactory implements LZBeanFactory {
 
     private String[] configLocations;//配置位置
-    private LZBeanDefinitionReader reader;
+    private LZBeanDefinitionReader reader;//用来具体处理配置文件的
 
     //单例的IoC容器缓存
     private Map<String,Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
@@ -78,6 +79,7 @@ public class LZApplicationContext extends LZDefaultListableBeanFactory implement
                 instance = this.factoryBeanObjectCache.get(className);
             }else {
                 //通过反射创建实例
+                //System.out.println("xxxxxxxxxxxxxxxxxxxx"+className);
                 Class<?> clazz = Class.forName(className);
                 instance = clazz.newInstance();
 
@@ -90,11 +92,19 @@ public class LZApplicationContext extends LZDefaultListableBeanFactory implement
         return instance;
     }
 
+    /**
+     * 这个方法在Spring源码中，是具体进行DI依赖注入操作的，但是在这里为什么类的属性没有注入成功，是因为实例化对象后，没有进行属性的赋值注入
+     * 所以实例是创建了，不为null，但是实例对象的属性并没有注入，所以根本无法使用
+     * 这里是需要修改完善的一块才能真正实现依赖注入 TODO
+     * 目前我是使用直接new对象，而不是依靠SpringIoC来管理，确切的说并未成功实现Spring框架，但是也了解了原理和实现逻辑
+     * Field类-反射学习
+     * @param beanName
+     * @param instance
+     */
     private void populateBean(String beanName,Object instance) {
         Class clazz = instance.getClass();
         // isAnnotationPresent 如果指定类型的注释存在于此元素上，则返回 true，否则返回 false
-        if(!(clazz.isAnnotationPresent(LZController.class)||
-                clazz.isAnnotationPresent(LZService.class))){
+        if(!(clazz.isAnnotationPresent(LZController.class)|| clazz.isAnnotationPresent(LZService.class))){
             return;
         }
 
@@ -110,8 +120,32 @@ public class LZApplicationContext extends LZDefaultListableBeanFactory implement
             if("".equals(autowiredBeanName)){
                 autowiredBeanName = field.getType().getName();
             }
-            field.setAccessible(true);
+            field.setAccessible(true);//跳过安全检查，加快反射速度
+
+            //***********************************************
+
+            //不仅仅使用 == null , 而是使用反射来查看实例属性是否为null,结果为null,注入失败
+//            Class clazz2 = instance.getClass();
+//            Field field1[] = clazz2.getDeclaredFields();
+//            for (Field field2 : field1){
+//                field2.setAccessible(true);
+//                Object fieldValue2 = null;
+//                try {
+//                    fieldValue2 = field2.get(instance);
+//                    Type fieldType = field2.getGenericType();
+//                    String fileName = field2.getName();
+//                    System.out.println("type:"+fieldType+",name:"+fileName+",value:"+fieldValue2);
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+
+            //***********************************************
+
+
             try {
+                //这里设置属性的值，因为null抛出异常，也是框架注入失败异常出现的点
+                //根据Debug在这里进行设置时instance的属性值已经为null了
                 field.set(instance,this.factoryBeanInstanceCache.get(autowiredBeanName).getWrappedInstance());
             }catch (IllegalAccessException e){
                 e.printStackTrace();
@@ -146,7 +180,7 @@ public class LZApplicationContext extends LZDefaultListableBeanFactory implement
                 throw new Exception("The" + beanDefinition.getFactoryBeanName() +"is exists!");
             }
             //把类存储到伪容器中
-            super.beanDefinitionMap.put(beanDefinition.getFactoryBeanName(),beanDefinition);
+            this.beanDefinitionMap.put(beanDefinition.getFactoryBeanName(),beanDefinition);
         }
         //到这里为止，容器初始化完毕
     }

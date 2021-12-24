@@ -1,6 +1,7 @@
 package com.lanzong.spring.demo.action;
 
 import com.lanzong.spring.demo.service.IQueryService;
+import com.lanzong.spring.demo.service.impl.QueryService;
 import com.lanzong.spring.framework.annotation.LZAutowired;
 import com.lanzong.spring.framework.annotation.LZController;
 import com.lanzong.spring.framework.annotation.LZRequestMapping;
@@ -14,8 +15,11 @@ import java.util.Map;
 @LZRequestMapping("/")
 public class PageAction {
 
-    @LZAutowired
-    IQueryService queryService;
+    //因为DI失败，所以直接new
+    QueryService queryService = new QueryService();
+
+//    @LZAutowired
+//    IQueryService queryService;
 
     @LZRequestMapping("/first.html")
     public LZModelAndView query(@LZRequestParam("teacher")String teacher){

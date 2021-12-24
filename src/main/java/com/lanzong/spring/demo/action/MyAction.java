@@ -2,6 +2,8 @@ package com.lanzong.spring.demo.action;
 
 import com.lanzong.spring.demo.service.IModifyService;
 import com.lanzong.spring.demo.service.IQueryService;
+import com.lanzong.spring.demo.service.impl.ModifyService;
+import com.lanzong.spring.demo.service.impl.QueryService;
 import com.lanzong.spring.framework.annotation.LZAutowired;
 import com.lanzong.spring.framework.annotation.LZController;
 import com.lanzong.spring.framework.annotation.LZRequestMapping;
@@ -16,11 +18,15 @@ import java.io.IOException;
 @LZRequestMapping("/web")
 public class MyAction {
 
-    @LZAutowired
-    IQueryService queryService;
+    //因为DI失败，所以直接new
+    QueryService queryService = new QueryService();
+    ModifyService modifyService = new ModifyService();
 
-    @LZAutowired
-    IModifyService modifyService;
+    //@LZAutowired
+    //IQueryService queryService;
+
+//    @LZAutowired
+//    IModifyService modifyService;
 
     @LZRequestMapping("/query.json")
     public LZModelAndView query(HttpServletRequest req, HttpServletResponse resp, @LZRequestParam("name")String name){
